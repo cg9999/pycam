@@ -448,7 +448,24 @@ def get_lines_grid(models, (low, high), layer_distance, line_distance=None,
         yield get_lines_layer(lines, layers[-1], last_z=last_z,
                 step_width=step_width, milling_style=milling_style)
 
+
 def get_pocketing_polygons(polygons, offset, pocketing_type, callback=None):
+    try:
+        import pycam.Toolpath.LibArea
+        use_libarea = True
+    except ImportError:
+        use_libarea = False
+    if use_libarea:
+        _log.debug("Using libarea pocketing algorithm")
+        poly = pycam.Toolpath.LibArea._pocket_model(polygons)
+    else:
+        _log.info("Failed to load libarea library.")
+        poly = get_pocketing_polygons_simple(polygons, offset, pocketing_type,
+                callback)
+    return poly
+
+
+def get_pocketing_polygons_simple(polygons, offset, pocketing_type, callback=None):
     pocketing_limit = 1000
     base_polygons = []
     other_polygons = []
